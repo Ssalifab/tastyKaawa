@@ -1,201 +1,488 @@
-/* ==========================================
-   TASTY KAAWA SHOP
-========================================== */
+/*=====================================================
+    TASTY KAAWA SHOP
+=====================================================*/
 
-let cart = JSON.parse(localStorage.getItem("tastyCart")) || [];
+let cart = loadCart();
 
-/* ==========================================
-   SAVE CART
-========================================== */
 
-function saveCart() {
+/*=====================================================
+RENDER PRODUCTS
+=====================================================*/
 
-    localStorage.setItem(
-        "tastyCart",
-        JSON.stringify(cart)
-    );
+function renderProducts(productList = PRODUCTS){
 
-    updateCartCount();
+    const grid = document.getElementById("productGrid");
 
-}
+    if(!grid) return;
 
-/* ==========================================
-   UPDATE CART BADGE
-========================================== */
+    grid.innerHTML = "";
 
-function updateCartCount() {
+    productList.forEach(product=>{
 
-    const badge = document.getElementById("cartCount");
-
-    if (!badge) return;
-
-    let total = 0;
-
-    cart.forEach(item => {
-
-        total += item.quantity;
+        grid.innerHTML += createProductCard(product);
 
     });
 
-    badge.textContent = total;
+}
+
+
+/*=====================================================
+PRODUCT CARD
+=====================================================*/
+
+function createProductCard(product){
+
+    return `
+
+<div class="col-lg-4 col-md-6">
+
+<div class="product-card h-100 shadow-sm">
+
+<img
+
+src="${product.image}"
+
+class="img-fluid rounded"
+
+alt="${product.name}">
+
+<div class="mt-3">
+
+<span class="badge-coffee">
+
+${product.process}
+
+</span>
+
+<h3 class="mt-3">
+
+${product.name}
+
+</h3>
+
+<p>
+
+${product.description}
+
+</p>
+
+<div class="mb-2">
+
+<strong>
+
+Grade:
+
+</strong>
+
+${product.grade}
+
+</div>
+
+<div class="price">
+
+${formatUGX(product.price)}
+
+<small>
+
+/ ${product.unit}
+
+</small>
+
+</div>
+
+<div class="mt-3">
+
+<input
+
+type="number"
+
+id="qty-${product.id}"
+
+class="form-control"
+
+value="1"
+
+min="1"
+
+max="100">
+
+</div>
+
+<div class="mt-3 d-grid">
+
+<button
+
+class="btn-coffee"
+
+onclick="addToCart(${product.id})">
+
+<i class="fas fa-cart-plus"></i>
+
+Add To Cart
+
+</button>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+`;
 
 }
 
-/* ==========================================
-   ADD TO CART
-========================================== */
 
-function addToCart(id, name, price) {
+/*=====================================================
+ADD TO CART
+=====================================================*/
 
-    const existing = cart.find(item => item.id === id);
+function addToCart(productId){
 
-    if (existing) {
+    const product = getProduct(productId);
 
-        existing.quantity++;
+    if(!product) return;
 
-    } else {
+    const qtyBox = document.getElementById(
+
+        `qty-${productId}`
+
+    );
+
+    let quantity = parseInt(qtyBox.value);
+
+    if(isNaN(quantity) || quantity < 1){
+
+        quantity = 1;
+
+    }
+
+    const index = getCartIndex(
+
+        cart,
+
+        productId
+
+    );
+
+    if(index > -1){
+
+        cart[index].quantity += quantity;
+
+    }
+
+    else{
 
         cart.push({
 
-            id: id,
-            name: name,
-            price: Number(price),
-            quantity: 1
+            id: product.id,
+
+            quantity: quantity
 
         });
 
     }
 
-    saveCart();
+    saveCart(cart);
+
+    qtyBox.value = 1;
 
     showNotification(
-        `${name} added to cart`
+
+        `${product.name} added to cart.`
+
     );
 
 }
+/*=====================================================
+SEARCH PRODUCTS
+=====================================================*/
 
-/* ==========================================
-   BUTTON EVENTS
-========================================== */
+function initialiseSearch() {
 
-document
-.querySelectorAll(".add-cart")
-.forEach(button => {
+    const searchBox = document.getElementById("searchProduct");
 
-    button.addEventListener("click", () => {
+    if (!searchBox) return;
 
-        addToCart(
+    searchBox.addEventListener("input", function () {
 
-            button.dataset.id,
+        const keyword = this.value.trim().toLowerCase();
 
-            button.dataset.name,
+        const filtered = PRODUCTS.filter(product =>
 
-            button.dataset.price
+            product.name.toLowerCase().includes(keyword) ||
+
+            product.process.toLowerCase().includes(keyword) ||
+
+            product.grade.toLowerCase().includes(keyword) ||
+
+            product.description.toLowerCase().includes(keyword)
 
         );
 
-    });
-
-});
-
-/* ==========================================
-   PRODUCT SEARCH
-========================================== */
-
-const searchInput =
-document.getElementById("searchProduct");
-
-if (searchInput) {
-
-    searchInput.addEventListener("keyup", function () {
-
-        const keyword =
-        this.value.toLowerCase();
-
-        document
-        .querySelectorAll(".product-card")
-        .forEach(card => {
-
-            const title =
-            card.querySelector("h3")
-            .textContent
-            .toLowerCase();
-
-            if (title.includes(keyword)) {
-
-                card.parentElement.style.display = "";
-
-            } else {
-
-                card.parentElement.style.display = "none";
-
-            }
-
-        });
+        renderProducts(filtered);
 
     });
 
 }
 
-/* ==========================================
-   CATEGORY FILTER
-========================================== */
 
-const categoryButtons =
-document.querySelectorAll(".category-filter button");
+/*=====================================================
+CATEGORY FILTERS
+=====================================================*/
 
-categoryButtons.forEach(button => {
+function initialiseFilters() {
 
-    button.addEventListener("click", function () {
+    const buttons = document.querySelectorAll(
 
-        categoryButtons.forEach(btn =>
-            btn.classList.remove("active")
-        );
+        ".category-filter button"
 
-        this.classList.add("active");
+    );
 
-        const category =
-        this.textContent.trim().toLowerCase();
+    buttons.forEach(button => {
 
-        document
-        .querySelectorAll(".product-card")
-        .forEach(card => {
+        button.addEventListener("click", function () {
+
+            buttons.forEach(btn =>
+
+                btn.classList.remove("active")
+
+            );
+
+            this.classList.add("active");
+
+            const category = this.dataset.category;
 
             if (category === "all") {
 
-                card.parentElement.style.display = "";
+                renderProducts();
 
                 return;
 
             }
 
-            const title =
-            card.querySelector("h3")
-            .textContent
-            .toLowerCase();
+            const filtered = PRODUCTS.filter(product =>
 
-            if (title.includes(category.replace(" roast", ""))) {
+                product.category === category
 
-                card.parentElement.style.display = "";
+            );
 
-            } else {
-
-                card.parentElement.style.display = "none";
-
-            }
+            renderProducts(filtered);
 
         });
 
     });
 
-});
+}
 
-/* ==========================================
-   INITIALISE SHOP
-========================================== */
 
-document.addEventListener("DOMContentLoaded", () => {
+/*=====================================================
+RENDER MARKET PRICES
+=====================================================*/
 
-    updateCartCount();
+function renderMarketPrices() {
 
-});
+    const internationalTable = document.getElementById(
+
+        "internationalPrices"
+
+    );
+
+    const ugandaTable = document.getElementById(
+
+        "ugandaPrices"
+
+    );
+
+    if (internationalTable) {
+
+        internationalTable.innerHTML = "";
+
+        MARKET_PRICES.international.forEach(item => {
+
+            internationalTable.innerHTML += `
+
+<tr>
+
+    <td>${item.grade}</td>
+
+    <td class="text-end">
+
+        ${item.price}
+
+    </td>
+
+</tr>
+
+`;
+
+        });
+
+    }
+
+    if (ugandaTable) {
+
+        ugandaTable.innerHTML = "";
+
+        MARKET_PRICES.uganda.forEach(item => {
+
+            let value = "";
+
+            if (item.price) {
+
+                value = formatUGX(item.price);
+
+            }
+
+            else {
+
+                value =
+
+                    formatUGX(item.min)
+
+                    +
+
+                    " - "
+
+                    +
+
+                    formatUGX(item.max);
+
+            }
+
+            ugandaTable.innerHTML += `
+
+<tr>
+
+    <td>${item.grade}</td>
+
+    <td class="text-end">
+
+        ${value}
+
+    </td>
+
+</tr>
+
+`;
+
+        });
+
+    }
+
+}
+
+
+/*=====================================================
+SORT PRODUCTS
+=====================================================*/
+
+function sortProducts(type) {
+
+    let sorted = [...PRODUCTS];
+
+    switch (type) {
+
+        case "priceLow":
+
+            sorted.sort((a, b) =>
+
+                a.price - b.price
+
+            );
+
+            break;
+
+        case "priceHigh":
+
+            sorted.sort((a, b) =>
+
+                b.price - a.price
+
+            );
+
+            break;
+
+        case "name":
+
+            sorted.sort((a, b) =>
+
+                a.name.localeCompare(b.name)
+
+            );
+
+            break;
+
+    }
+
+    renderProducts(sorted);
+
+}
+
+
+/*=====================================================
+RESET SEARCH
+=====================================================*/
+
+function resetFilters() {
+
+    const search = document.getElementById("searchProduct");
+
+    if (search) {
+
+        search.value = "";
+
+    }
+
+    document
+
+        .querySelectorAll(".category-filter button")
+
+        .forEach(btn =>
+
+            btn.classList.remove("active")
+
+        );
+
+    const allButton = document.querySelector(
+
+        '[data-category="all"]'
+
+    );
+
+    if (allButton) {
+
+        allButton.classList.add("active");
+
+    }
+
+    renderProducts();
+
+}
+
+
+/*=====================================================
+INITIALISE SHOP
+=====================================================*/
+
+document.addEventListener(
+
+    "DOMContentLoaded",
+
+    function () {
+
+        updateCartBadge();
+
+        renderProducts();
+
+        renderMarketPrices();
+
+        initialiseSearch();
+
+        initialiseFilters();
+
+    }
+
+);

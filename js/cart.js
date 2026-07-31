@@ -1,322 +1,585 @@
-/* ==========================================
-   TASTY KAAWA CART
-========================================== */
+/*=====================================================
+    TASTY KAAWA CART
+=====================================================*/
 
-let cart = JSON.parse(localStorage.getItem("tastyCart")) || [];
+let cart = loadCart();
 
-const cartContainer = document.getElementById("cartItems");
-const emptyCart = document.getElementById("emptyCart");
 
-const summaryItems = document.getElementById("summaryItems");
-const summarySubtotal = document.getElementById("summarySubtotal");
-const summaryTotal = document.getElementById("summaryTotal");
+/*=====================================================
+GET CART PRODUCTS
+=====================================================*/
 
-const cartBadge = document.getElementById("cartCount");
+function getCartProducts(){
 
-/* ==========================================
-   FORMAT CURRENCY
-========================================== */
+    return cart.map(cartItem=>{
 
-function formatUGX(amount) {
+        const product = getProduct(cartItem.id);
 
-    return "UGX " + amount.toLocaleString();
+        if(!product) return null;
 
-}
+        return{
 
-/* ==========================================
-   SAVE CART
-========================================== */
+            ...product,
 
-function saveCart() {
+            quantity: cartItem.quantity
 
-    localStorage.setItem(
-        "tastyCart",
-        JSON.stringify(cart)
-    );
+        };
 
-    renderCart();
+    }).filter(item=>item!==null);
 
 }
 
-/* ==========================================
-   UPDATE CART BADGE
-========================================== */
 
-function updateBadge() {
-
-    if (!cartBadge) return;
-
-    let total = 0;
-
-    cart.forEach(item => {
-
-        total += item.quantity;
-
-    });
-
-    cartBadge.textContent = total;
-
-}
-
-/* ==========================================
-   INCREASE
-========================================== */
-
-function increase(id) {
-
-    const item = cart.find(p => p.id == id);
-
-    if(item){
-
-        item.quantity++;
-
-        saveCart();
-
-    }
-
-}
-
-/* ==========================================
-   DECREASE
-========================================== */
-
-function decrease(id) {
-
-    const item = cart.find(p => p.id == id);
-
-    if(item){
-
-        item.quantity--;
-
-        if(item.quantity <= 0){
-
-            cart = cart.filter(p => p.id != id);
-
-        }
-
-        saveCart();
-
-    }
-
-}
-
-/* ==========================================
-REMOVE PRODUCT
-========================================== */
-
-function removeItem(id){
-
-    cart = cart.filter(item => item.id != id);
-
-    saveCart();
-
-}
-/* ==========================================
+/*=====================================================
 RENDER CART
-========================================== */
+=====================================================*/
 
 function renderCart(){
 
-    if(!cartContainer) return;
+    const container = document.getElementById("cartItems");
 
-    cartContainer.innerHTML = "";
+    const empty = document.getElementById("emptyCart");
 
-    if(cart.length === 0){
+    if(!container) return;
 
-        emptyCart.style.display = "block";
+    container.innerHTML="";
 
-        summaryItems.textContent = 0;
+    const products = getCartProducts();
 
-        summarySubtotal.textContent = "UGX 0";
+    if(products.length===0){
 
-        summaryTotal.textContent = "UGX 0";
+        empty.style.display="block";
 
-        updateBadge();
+        updateSummary(0,0);
 
         return;
 
     }
 
-    emptyCart.style.display = "none";
+    empty.style.display="none";
 
     let subtotal = 0;
 
     let totalItems = 0;
 
-        cart.forEach(item => {
+    products.forEach(product=>{
 
-        subtotal += item.price * item.quantity;
+        subtotal += product.price * product.quantity;
 
-        totalItems += item.quantity;
+        totalItems += product.quantity;
 
-        cartContainer.innerHTML += `
-
-        <div class="cart-item">
-
-            <div class="row align-items-center">
-
-                <div class="col-md-5">
-
-                    <h4>${item.name}</h4>
-
-                    <p class="text-muted">
-
-                        ${formatUGX(item.price)}
-
-                    </p>
-
-                </div>
-
-                <div class="col-md-3 text-center">
-
-                    <div class="quantity-controls d-flex justify-content-center align-items-center">
-
-                        <button
-                            class="btn btn-sm btn-outline-secondary"
-                            onclick="decrease('${item.id}')">
-
-                            -
-
-                        </button>
-
-                        <span class="mx-3 fw-bold">
-
-                            ${item.quantity}
-
-                        </span>
-
-                        <button
-                            class="btn btn-sm btn-outline-secondary"
-                            onclick="increase('${item.id}')">
-
-                            +
-
-                        </button>
-
-                    </div>
-
-                </div>
-
-                <div class="col-md-2 text-center">
-
-                    <strong>
-
-                        ${formatUGX(item.price * item.quantity)}
-
-                    </strong>
-
-                </div>
-
-                <div class="col-md-2 text-end">
-
-                    <button
-                        class="btn btn-danger btn-sm"
-                        onclick="removeItem('${item.id}')">
-
-                        <i class="fas fa-trash"></i>
-
-                    </button>
-
-                </div>
-
-            </div>
-
-        </div>
-
-        `;
+        container.innerHTML += createCartCard(product);
 
     });
 
-    summaryItems.textContent = totalItems;
+    updateSummary(
 
-    summarySubtotal.textContent = formatUGX(subtotal);
+        totalItems,
 
-    summaryTotal.textContent = formatUGX(subtotal);
+        subtotal
 
-    updateBadge();
+    );
 
 }
 
-/* ==========================================
-INITIALISE CART
-========================================== */
 
-document.addEventListener("DOMContentLoaded", () => {
+/*=====================================================
+CREATE PRODUCT CARD
+=====================================================*/
 
-    renderCart();
+function createCartCard(product){
 
-});
+    return `
 
-/* ==========================================
-ORDER INQUIRY
-========================================== */
+<div class="card shadow-sm border-0 rounded-4 mb-4">
 
-const checkoutForm = document.getElementById("checkoutForm");
+<div class="card-body">
 
-if (checkoutForm) {
+<div class="row align-items-center">
 
-    checkoutForm.addEventListener("submit", function (e) {
+<div class="col-lg-3">
 
-        e.preventDefault();
+<img
 
-        if (cart.length === 0) {
+src="${product.image}"
 
-            alert("Your cart is empty.");
+class="img-fluid rounded"
 
-            return;
+alt="${product.name}">
 
-        }
+</div>
 
-        const customer = {
+<div class="col-lg-4">
 
-            name: document.getElementById("customerName").value,
+<h4>
 
-            email: document.getElementById("customerEmail").value,
+${product.name}
 
-            phone: document.getElementById("customerPhone").value,
+</h4>
 
-            location: document.getElementById("customerLocation").value,
+<p class="small text-muted">
 
-            notes: document.getElementById("customerNotes").value
+${product.description}
 
-        };
+</p>
 
-        let orderSummary = "";
+<div class="mt-2">
 
-        cart.forEach(item => {
+<span class="badge-coffee">
 
-            orderSummary +=
+${product.process}
 
-`${item.name}
-Quantity: ${item.quantity}
-Price: ${formatUGX(item.price)}
+</span>
+
+</div>
+
+<div class="mt-2">
+
+<strong>
+
+${product.grade}
+
+</strong>
+
+</div>
+
+<div class="mt-2">
+
+${formatUGX(product.price)}
+
+/
+
+${product.unit}
+
+</div>
+
+</div>
+
+<div class="col-lg-3">
+
+<div class="input-group">
+
+<button
+
+class="btn btn-outline-secondary"
+
+onclick="decrease(${product.id})">
+
+-
+
+</button>
+
+<input
+
+class="form-control text-center"
+
+value="${product.quantity}"
+
+readonly>
+
+<button
+
+class="btn btn-outline-secondary"
+
+onclick="increase(${product.id})">
+
++
+
+</button>
+
+</div>
+
+</div>
+
+<div class="col-lg-2 text-end">
+
+<h5>
+
+${formatUGX(
+
+product.price*product.quantity
+
+)}
+
+</h5>
+
+<button
+
+class="btn btn-outline-danger mt-3"
+
+onclick="removeItem(${product.id})">
+
+<i class="fas fa-trash"></i>
+
+</button>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
 
 `;
 
-        });
+}
+/*=====================================================
+INCREASE QUANTITY
+=====================================================*/
 
-        console.log({
+function increase(productId){
 
-            customer,
+    const index = getCartIndex(cart, productId);
 
-            cart,
+    if(index === -1) return;
 
-            orderSummary
+    cart[index].quantity++;
 
-        });
+    saveCart(cart);
 
-        alert(
-            "Thank you! Your order inquiry has been received. We will contact you shortly."
-        );
+    renderCart();
 
-        cart = [];
+}
 
-        localStorage.removeItem("tastyCart");
 
-        checkoutForm.reset();
+/*=====================================================
+DECREASE QUANTITY
+=====================================================*/
 
-        renderCart();
+function decrease(productId){
+
+    const index = getCartIndex(cart, productId);
+
+    if(index === -1) return;
+
+    if(cart[index].quantity > 1){
+
+        cart[index].quantity--;
+
+    }
+
+    else{
+
+        cart.splice(index,1);
+
+    }
+
+    saveCart(cart);
+
+    renderCart();
+
+}
+
+
+/*=====================================================
+REMOVE PRODUCT
+=====================================================*/
+
+function removeItem(productId){
+
+    const confirmed = confirm(
+
+        "Remove this product from your cart?"
+
+    );
+
+    if(!confirmed) return;
+
+    const index = getCartIndex(cart, productId);
+
+    if(index > -1){
+
+        cart.splice(index,1);
+
+    }
+
+    saveCart(cart);
+
+    renderCart();
+
+}
+
+
+/*=====================================================
+UPDATE SUMMARY
+=====================================================*/
+
+function updateSummary(totalItems, subtotal){
+
+    document.getElementById(
+
+        "summaryItems"
+
+    ).textContent = totalItems;
+
+    document.getElementById(
+
+        "summarySubtotal"
+
+    ).textContent = formatUGX(subtotal);
+
+    document.getElementById(
+
+        "summaryTotal"
+
+    ).textContent = formatUGX(subtotal);
+
+    updateCartBadge();
+
+}
+
+
+/*=====================================================
+BUILD ORDER
+=====================================================*/
+
+function buildOrder(){
+
+    const customer = {
+
+        name:
+
+            document.getElementById("customerName").value.trim(),
+
+        email:
+
+            document.getElementById("customerEmail").value.trim(),
+
+        phone:
+
+            document.getElementById("customerPhone").value.trim(),
+
+        location:
+
+            document.getElementById("deliveryLocation").value.trim(),
+
+        customerType:
+
+            document.getElementById("customerType").value,
+
+        preferredContact:
+
+            document.getElementById("preferredContact").value,
+
+        notes:
+
+            document.getElementById("customerNotes").value.trim(),
+
+        newsletter:
+
+            document.getElementById("newsletter").checked
+
+    };
+
+    let totalAmount = 0;
+
+    let totalItems = 0;
+
+    const orderItems = getCartProducts().map(product=>{
+
+        const lineTotal =
+
+            product.price * product.quantity;
+
+        totalAmount += lineTotal;
+
+        totalItems += product.quantity;
+
+        return{
+
+            id:product.id,
+
+            name:product.name,
+
+            process:product.process,
+
+            grade:product.grade,
+
+            unit:product.unit,
+
+            unitPrice:product.price,
+
+            quantity:product.quantity,
+
+            lineTotal:lineTotal
+
+        };
 
     });
 
+    return{
+
+        orderNumber:
+
+            generateOrderNumber(),
+
+        orderDate:
+
+            new Date().toISOString(),
+
+        currency:"UGX",
+
+        customer:customer,
+
+        items:orderItems,
+
+        totalItems:totalItems,
+
+        totalAmount:totalAmount
+
+    };
+
 }
+
+
+/*=====================================================
+CHECKOUT
+=====================================================*/
+
+const checkoutForm =
+
+document.getElementById("checkoutForm");
+
+if(checkoutForm){
+
+    checkoutForm.addEventListener(
+
+        "submit",
+
+        submitOrder
+
+    );
+
+}
+
+
+function submitOrder(e){
+
+    e.preventDefault();
+
+    if(cart.length===0){
+
+        showNotification(
+
+            "Your cart is empty.",
+
+            "warning"
+
+        );
+
+        return;
+
+    }
+
+    const email =
+
+        document.getElementById(
+
+            "customerEmail"
+
+        ).value;
+
+    if(!validEmail(email)){
+
+        showNotification(
+
+            "Please enter a valid email address.",
+
+            "danger"
+
+        );
+
+        return;
+
+    }
+
+    const phone =
+
+        document.getElementById(
+
+            "customerPhone"
+
+        ).value;
+
+    if(!validPhone(phone)){
+
+        showNotification(
+
+            "Please enter a valid phone number.",
+
+            "danger"
+
+        );
+
+        return;
+
+    }
+
+    const order = buildOrder();
+
+    console.log(order);
+
+    /*
+    ===============================================
+    NETLIFY FUNCTION
+
+    fetch("/.netlify/functions/order",{
+
+        method:"POST",
+
+        headers:{
+
+            "Content-Type":"application/json"
+
+        },
+
+        body:JSON.stringify(order)
+
+    })
+
+    ===============================================
+    */
+
+    alert(
+
+`Thank you for your order!
+
+Order Number:
+
+${order.orderNumber}
+
+Our sales team will contact you shortly to confirm pricing, payment and delivery.`
+
+    );
+
+    cart = [];
+
+    clearCart();
+
+    checkoutForm.reset();
+
+    renderCart();
+
+}
+
+
+/*=====================================================
+INITIALISE
+=====================================================*/
+
+document.addEventListener(
+
+    "DOMContentLoaded",
+
+    function(){
+
+        cart = loadCart();
+
+        updateCartBadge();
+
+        renderCart();
+
+    }
+
+);

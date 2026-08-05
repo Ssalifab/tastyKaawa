@@ -118,12 +118,19 @@ async function submitContactForm(e) {
 
     }
 
-    setButtonLoading(button, true);
-        try {
+    try {
 
-        await new Promise(resolve => setTimeout(resolve, 1200));
+    const response = await fetch("/.netlify/functions/contact", {
 
-        console.log({
+        method: "POST",
+
+        headers: {
+
+            "Content-Type": "application/json"
+
+        },
+
+        body: JSON.stringify({
 
             name,
 
@@ -135,30 +142,50 @@ async function submitContactForm(e) {
 
             message
 
-        });
+        })
 
-        showNotification(
+    });
 
-            "Thank you! Your message has been sent."
+    const result = await response.json();
 
-        );
+    if (!response.ok) {
 
-        form.reset();
+        throw new Error(
 
-    } catch (error) {
-
-        console.error(error);
-
-        showNotification(
-
-            "Something went wrong. Please try again."
+            result.message || "Failed to send message."
 
         );
-
-    } finally {
-
-        setButtonLoading(button, false);
 
     }
+
+    showNotification(
+
+        "Thank you! Your message has been sent successfully."
+
+    );
+
+    form.reset();
+
+}
+
+catch (error) {
+
+    console.error(error);
+
+    showNotification(
+
+        error.message || "Something went wrong.",
+
+        "danger"
+
+    );
+
+}
+
+finally {
+
+    setButtonLoading(button, false);
+
+}
 
 }

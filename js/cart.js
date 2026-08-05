@@ -2,30 +2,15 @@
     TASTY KAAWA CART
 =====================================================*/
 
-let cart = loadCart();
-
 
 /*=====================================================
-GET CART PRODUCTS
+GET CURRENT CART
+Always read from LocalStorage
 =====================================================*/
 
-function getCartProducts(){
+function getCurrentCart(){
 
-    return cart.map(cartItem=>{
-
-        const product = getProduct(cartItem.id);
-
-        if(!product) return null;
-
-        return{
-
-            ...product,
-
-            quantity: cartItem.quantity
-
-        };
-
-    }).filter(item=>item!==null);
+    return getCartProducts();
 
 }
 
@@ -36,39 +21,49 @@ RENDER CART
 
 function renderCart(){
 
-    const container = document.getElementById("cartItems");
+    const products = getCurrentCart();
 
-    const empty = document.getElementById("emptyCart");
+    const container =
+        document.getElementById("cartItems");
+
+    const empty =
+        document.getElementById("emptyCart");
 
     if(!container) return;
 
-    container.innerHTML="";
+    container.innerHTML = "";
 
-    const products = getCartProducts();
+    if(products.length === 0){
 
-    if(products.length===0){
-
-        empty.style.display="block";
+        empty.style.display = "block";
 
         updateSummary(0,0);
+
+        updateCartBadge();
 
         return;
 
     }
 
-    empty.style.display="none";
-
-    let subtotal = 0;
+    empty.style.display = "none";
 
     let totalItems = 0;
 
-    products.forEach(product=>{
+    let subtotal = 0;
 
-        subtotal += product.price * product.quantity;
+    products.forEach(product=>{
 
         totalItems += product.quantity;
 
-        container.innerHTML += createCartCard(product);
+        subtotal +=
+
+            product.quantity *
+
+            product.price;
+
+        container.innerHTML +=
+
+            createCartCard(product);
 
     });
 
@@ -80,30 +75,32 @@ function renderCart(){
 
     );
 
+    updateCartBadge();
+
 }
 
 
 /*=====================================================
-CREATE PRODUCT CARD
+CREATE CART CARD
 =====================================================*/
 
 function createCartCard(product){
 
-    return `
+return `
 
-<div class="card shadow-sm border-0 rounded-4 mb-4">
+<div class="card border-0 shadow-sm rounded-4 mb-4">
 
 <div class="card-body">
 
-<div class="row align-items-center">
+<div class="row align-items-center gy-3">
 
-<div class="col-lg-3">
+<div class="col-lg-3 text-center">
 
 <img
 
 src="${product.image}"
 
-class="img-fluid rounded"
+class="img-fluid rounded-4"
 
 alt="${product.name}">
 
@@ -111,77 +108,77 @@ alt="${product.name}">
 
 <div class="col-lg-4">
 
-<h4>
-
-${product.name}
-
-</h4>
-
-<p class="small text-muted">
-
-${product.description}
-
-</p>
-
-<div class="mt-2">
-
 <span class="badge-coffee">
 
 ${product.process}
 
 </span>
 
-</div>
+<h4 class="mt-3">
 
-<div class="mt-2">
+${product.name}
+
+</h4>
+
+<p class="text-muted">
+
+${product.description}
+
+</p>
+
+<p class="mb-1">
 
 <strong>
 
-${product.grade}
+Grade:
 
 </strong>
 
-</div>
+${product.grade}
 
-<div class="mt-2">
+</p>
+
+<p>
+
+<strong>
 
 ${formatUGX(product.price)}
+
+</strong>
 
 /
 
 ${product.unit}
 
-</div>
+</p>
 
 </div>
 
 <div class="col-lg-3">
 
-<div class="input-group">
+<div class="d-flex justify-content-center align-items-center">
 
 <button
 
 class="btn btn-outline-secondary"
 
-onclick="decrease(${product.id})">
+onclick="decreaseItem(${product.id})">
 
--
+−
 
 </button>
 
-<input
+<span class="mx-3 fw-bold">
 
-class="form-control text-center"
+${product.quantity}
 
-value="${product.quantity}"
-
-readonly>
+</span>
 
 <button
 
 class="btn btn-outline-secondary"
 
-onclick="increase(${product.id})">
+onclick="increaseItem(${product.id})">
 
 +
 
@@ -191,13 +188,15 @@ onclick="increase(${product.id})">
 
 </div>
 
-<div class="col-lg-2 text-end">
+<div class="col-lg-2 text-center">
 
 <h5>
 
 ${formatUGX(
 
-product.price*product.quantity
+product.quantity *
+
+product.price
 
 )}
 
@@ -205,9 +204,9 @@ product.price*product.quantity
 
 <button
 
-class="btn btn-outline-danger mt-3"
+class="btn btn-outline-danger btn-sm mt-2"
 
-onclick="removeItem(${product.id})">
+onclick="deleteItem(${product.id})">
 
 <i class="fas fa-trash"></i>
 
@@ -224,88 +223,19 @@ onclick="removeItem(${product.id})">
 `;
 
 }
-/*=====================================================
-INCREASE QUANTITY
-=====================================================*/
-
-function increase(productId){
-
-    const index = getCartIndex(cart, productId);
-
-    if(index === -1) return;
-
-    cart[index].quantity++;
-
-    saveCart(cart);
-
-    renderCart();
-
-}
-
-
-/*=====================================================
-DECREASE QUANTITY
-=====================================================*/
-
-function decrease(productId){
-
-    const index = getCartIndex(cart, productId);
-
-    if(index === -1) return;
-
-    if(cart[index].quantity > 1){
-
-        cart[index].quantity--;
-
-    }
-
-    else{
-
-        cart.splice(index,1);
-
-    }
-
-    saveCart(cart);
-
-    renderCart();
-
-}
-
-
-/*=====================================================
-REMOVE PRODUCT
-=====================================================*/
-
-function removeItem(productId){
-
-    const confirmed = confirm(
-
-        "Remove this product from your cart?"
-
-    );
-
-    if(!confirmed) return;
-
-    const index = getCartIndex(cart, productId);
-
-    if(index > -1){
-
-        cart.splice(index,1);
-
-    }
-
-    saveCart(cart);
-
-    renderCart();
-
-}
 
 
 /*=====================================================
 UPDATE SUMMARY
 =====================================================*/
 
-function updateSummary(totalItems, subtotal){
+function updateSummary(
+
+    totalItems,
+
+    subtotal
+
+){
 
     document.getElementById(
 
@@ -325,7 +255,56 @@ function updateSummary(totalItems, subtotal){
 
     ).textContent = formatUGX(subtotal);
 
-    updateCartBadge();
+}
+/*=====================================================
+INCREASE ITEM
+=====================================================*/
+
+function increaseItem(productId){
+
+    increaseQuantity(productId);
+
+    renderCart();
+
+}
+
+
+/*=====================================================
+DECREASE ITEM
+=====================================================*/
+
+function decreaseItem(productId){
+
+    decreaseQuantity(productId);
+
+    renderCart();
+
+}
+
+
+/*=====================================================
+DELETE ITEM
+=====================================================*/
+
+function deleteItem(productId){
+
+    if(
+
+        !confirm(
+
+            "Remove this coffee from your cart?"
+
+        )
+
+    ){
+
+        return;
+
+    }
+
+    removeProduct(productId);
+
+    renderCart();
 
 }
 
@@ -340,69 +319,107 @@ function buildOrder(){
 
         name:
 
-            document.getElementById("customerName").value.trim(),
+            document.getElementById(
+
+                "customerName"
+
+            ).value.trim(),
 
         email:
 
-            document.getElementById("customerEmail").value.trim(),
+            document.getElementById(
+
+                "customerEmail"
+
+            ).value.trim(),
 
         phone:
 
-            document.getElementById("customerPhone").value.trim(),
+            document.getElementById(
+
+                "customerPhone"
+
+            ).value.trim(),
 
         location:
 
-            document.getElementById("deliveryLocation").value.trim(),
+            document.getElementById(
+
+                "deliveryLocation"
+
+            ).value.trim(),
 
         customerType:
 
-            document.getElementById("customerType").value,
+            document.getElementById(
+
+                "customerType"
+
+            ).value,
 
         preferredContact:
 
-            document.getElementById("preferredContact").value,
+            document.getElementById(
+
+                "preferredContact"
+
+            ).value,
 
         notes:
 
-            document.getElementById("customerNotes").value.trim(),
+            document.getElementById(
+
+                "customerNotes"
+
+            ).value.trim(),
 
         newsletter:
 
-            document.getElementById("newsletter").checked
+            document.getElementById(
+
+                "newsletter"
+
+            ).checked
 
     };
 
-    let totalAmount = 0;
-
     let totalItems = 0;
 
-    const orderItems = getCartProducts().map(product=>{
+    let totalAmount = 0;
+
+    const items = getCurrentCart().map(product=>{
 
         const lineTotal =
 
-            product.price * product.quantity;
+            product.price *
 
-        totalAmount += lineTotal;
+            product.quantity;
 
-        totalItems += product.quantity;
+        totalItems +=
+
+            product.quantity;
+
+        totalAmount +=
+
+            lineTotal;
 
         return{
 
-            id:product.id,
+            id: product.id,
 
-            name:product.name,
+            name: product.name,
 
-            process:product.process,
+            process: product.process,
 
-            grade:product.grade,
+            grade: product.grade,
 
-            unit:product.unit,
+            unit: product.unit,
 
-            unitPrice:product.price,
+            quantity: product.quantity,
 
-            quantity:product.quantity,
+            unitPrice: product.price,
 
-            lineTotal:lineTotal
+            lineTotal: lineTotal
 
         };
 
@@ -422,7 +439,7 @@ function buildOrder(){
 
         customer:customer,
 
-        items:orderItems,
+        items:items,
 
         totalItems:totalItems,
 
@@ -431,15 +448,17 @@ function buildOrder(){
     };
 
 }
-
-
 /*=====================================================
-CHECKOUT
+CHECKOUT FORM
 =====================================================*/
 
 const checkoutForm =
 
-document.getElementById("checkoutForm");
+document.getElementById(
+
+    "checkoutForm"
+
+);
 
 if(checkoutForm){
 
@@ -454,11 +473,15 @@ if(checkoutForm){
 }
 
 
-function submitOrder(e){
+/*=====================================================
+SUBMIT ORDER
+=====================================================*/
+
+async function submitOrder(e){
 
     e.preventDefault();
 
-    if(cart.length===0){
+    if(getCurrentCart().length===0){
 
         showNotification(
 
@@ -478,7 +501,7 @@ function submitOrder(e){
 
             "customerEmail"
 
-        ).value;
+        ).value.trim();
 
     if(!validEmail(email)){
 
@@ -500,7 +523,7 @@ function submitOrder(e){
 
             "customerPhone"
 
-        ).value;
+        ).value.trim();
 
     if(!validPhone(phone)){
 
@@ -516,69 +539,181 @@ function submitOrder(e){
 
     }
 
+    const submitButton =
+
+        checkoutForm.querySelector(
+
+            "button[type='submit']"
+
+        );
+
+    const originalText =
+
+        submitButton.innerHTML;
+
+    submitButton.disabled = true;
+
+    submitButton.innerHTML =
+
+`
+
+<i class="fas fa-spinner fa-spin"></i>
+
+Sending Order...
+
+`;
+
     const order = buildOrder();
 
-    console.log(order);
+    try{
 
-    /*
-    ===============================================
-    NETLIFY FUNCTION
+        const response = await fetch(
 
-    fetch("/.netlify/functions/order",{
+            "/.netlify/functions/order",
 
-        method:"POST",
+            {
 
-        headers:{
+                method:"POST",
 
-            "Content-Type":"application/json"
+                headers:{
 
-        },
+                    "Content-Type":"application/json"
 
-        body:JSON.stringify(order)
+                },
 
-    })
+                body:JSON.stringify(order)
 
-    ===============================================
-    */
+            }
 
-    alert(
+        );
 
-`Thank you for your order!
+        const result =
+
+            await response.json();
+
+        if(!response.ok){
+
+            throw new Error(
+
+                result.message ||
+
+                "Unable to submit your order."
+
+            );
+
+        }
+
+        showNotification(
+
+            "Order submitted successfully.",
+
+            "success"
+
+        );
+
+        alert(
+
+`Thank you for choosing Tasty Kaawa!
 
 Order Number:
 
-${order.orderNumber}
+${result.orderNumber}
 
-Our sales team will contact you shortly to confirm pricing, payment and delivery.`
+Your order inquiry has been received.
 
-    );
+Our sales team will contact you shortly.`
 
-    cart = [];
+        );
 
-    clearCart();
+        clearCart();
 
-    checkoutForm.reset();
+        checkoutForm.reset();
 
-    renderCart();
+        renderCart();
+
+    }
+
+    catch(error){
+
+        console.error(error);
+
+        showNotification(
+
+            error.message,
+
+            "danger"
+
+        );
+
+    }
+
+    finally{
+
+        submitButton.disabled = false;
+
+        submitButton.innerHTML =
+
+            originalText;
+
+    }
 
 }
-
-
 /*=====================================================
-INITIALISE
+INITIALISE CART
 =====================================================*/
 
 document.addEventListener(
 
     "DOMContentLoaded",
 
-    function(){
-
-        cart = loadCart();
+    ()=>{
 
         updateCartBadge();
 
         renderCart();
+
+    }
+
+);
+
+
+/*=====================================================
+AUTO REFRESH WHEN STORAGE CHANGES
+Useful when multiple tabs are open
+=====================================================*/
+
+window.addEventListener(
+
+    "storage",
+
+    ()=>{
+
+        updateCartBadge();
+
+        renderCart();
+
+    }
+
+);
+
+
+/*=====================================================
+REFRESH CART WHEN PAGE BECOMES ACTIVE
+=====================================================*/
+
+document.addEventListener(
+
+    "visibilitychange",
+
+    ()=>{
+
+        if(!document.hidden){
+
+            updateCartBadge();
+
+            renderCart();
+
+        }
 
     }
 

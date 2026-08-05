@@ -2,24 +2,34 @@
     TASTY KAAWA SHOP
 =====================================================*/
 
-let cart = loadCart();
-
 
 /*=====================================================
 RENDER PRODUCTS
 =====================================================*/
 
-function renderProducts(productList = PRODUCTS){
+function renderProducts(
 
-    const grid = document.getElementById("productGrid");
+    products = PRODUCTS
+
+){
+
+    const grid =
+
+    document.getElementById(
+
+        "productGrid"
+
+    );
 
     if(!grid) return;
 
     grid.innerHTML = "";
 
-    productList.forEach(product=>{
+    products.forEach(product=>{
 
-        grid.innerHTML += createProductCard(product);
+        grid.innerHTML +=
+
+        createProductCard(product);
 
     });
 
@@ -32,9 +42,9 @@ PRODUCT CARD
 
 function createProductCard(product){
 
-    return `
+return `
 
-<div class="col-lg-4 col-md-6">
+<div class="col-lg-4 col-md-6 mb-4">
 
 <div class="product-card h-100 shadow-sm">
 
@@ -66,7 +76,7 @@ ${product.description}
 
 </p>
 
-<div class="mb-2">
+<p>
 
 <strong>
 
@@ -76,7 +86,7 @@ Grade:
 
 ${product.grade}
 
-</div>
+</p>
 
 <div class="price">
 
@@ -96,9 +106,9 @@ ${formatUGX(product.price)}
 
 type="number"
 
-id="qty-${product.id}"
-
 class="form-control"
+
+id="qty-${product.id}"
 
 value="1"
 
@@ -108,13 +118,13 @@ max="100">
 
 </div>
 
-<div class="mt-3 d-grid">
+<div class="d-grid mt-3">
 
 <button
 
 class="btn-coffee"
 
-onclick="addToCart(${product.id})">
+onclick="shopAddToCart(${product.id})">
 
 <i class="fas fa-cart-plus"></i>
 
@@ -133,25 +143,19 @@ Add To Cart
 `;
 
 }
-
-
 /*=====================================================
 ADD TO CART
 =====================================================*/
 
-function addToCart(productId){
+function shopAddToCart(productId){
 
-    const product = getProduct(productId);
-
-    if(!product) return;
-
-    const qtyBox = document.getElementById(
+    const quantityBox = document.getElementById(
 
         `qty-${productId}`
 
     );
 
-    let quantity = parseInt(qtyBox.value);
+    let quantity = Number(quantityBox.value);
 
     if(isNaN(quantity) || quantity < 1){
 
@@ -159,81 +163,99 @@ function addToCart(productId){
 
     }
 
-    const index = getCartIndex(
+    const product = getProduct(productId);
 
-        cart,
+    if(!product){
 
-        productId
+        showNotification(
+
+            "Product not found.",
+
+            "danger"
+
+        );
+
+        return;
+
+    }
+
+    addToCart(
+
+        productId,
+
+        quantity
 
     );
 
-    if(index > -1){
-
-        cart[index].quantity += quantity;
-
-    }
-
-    else{
-
-        cart.push({
-
-            id: product.id,
-
-            quantity: quantity
-
-        });
-
-    }
-
-    saveCart(cart);
-
-    qtyBox.value = 1;
+    quantityBox.value = 1;
 
     showNotification(
 
-        `${product.name} added to cart.`
+        `${quantity} ${product.unit} of ${product.name} added to cart.`,
+
+        "success"
 
     );
 
 }
+
+
 /*=====================================================
 SEARCH PRODUCTS
 =====================================================*/
 
-function initialiseSearch() {
+function initialiseSearch(){
 
-    const searchBox = document.getElementById("searchProduct");
+    const search =
 
-    if (!searchBox) return;
+        document.getElementById(
 
-    searchBox.addEventListener("input", function () {
-
-        const keyword = this.value.trim().toLowerCase();
-
-        const filtered = PRODUCTS.filter(product =>
-
-            product.name.toLowerCase().includes(keyword) ||
-
-            product.process.toLowerCase().includes(keyword) ||
-
-            product.grade.toLowerCase().includes(keyword) ||
-
-            product.description.toLowerCase().includes(keyword)
+            "searchProduct"
 
         );
 
-        renderProducts(filtered);
+    if(!search) return;
 
-    });
+    search.addEventListener(
+
+        "input",
+
+        function(){
+
+            const keyword =
+
+                this.value
+
+                .trim()
+
+                .toLowerCase();
+
+            const filtered =
+
+                PRODUCTS.filter(product =>
+
+                    product.name.toLowerCase().includes(keyword) ||
+
+                    product.process.toLowerCase().includes(keyword) ||
+
+                    product.grade.toLowerCase().includes(keyword) ||
+
+                    product.description.toLowerCase().includes(keyword)
+
+                );
+
+            renderProducts(filtered);
+
+        }
+
+    );
 
 }
-
-
 /*=====================================================
 CATEGORY FILTERS
 =====================================================*/
 
-function initialiseFilters() {
+function initialiseFilters(){
 
     const buttons = document.querySelectorAll(
 
@@ -241,136 +263,49 @@ function initialiseFilters() {
 
     );
 
-    buttons.forEach(button => {
+    buttons.forEach(button=>{
 
-        button.addEventListener("click", function () {
+        button.addEventListener(
 
-            buttons.forEach(btn =>
+            "click",
 
-                btn.classList.remove("active")
+            function(){
 
-            );
+                buttons.forEach(btn=>{
 
-            this.classList.add("active");
+                    btn.classList.remove("active");
 
-            const category = this.dataset.category;
+                });
 
-            if (category === "all") {
+                this.classList.add("active");
 
-                renderProducts();
+                const category =
 
-                return;
+                    this.dataset.category;
+
+                if(category==="all"){
+
+                    renderProducts();
+
+                    return;
+
+                }
+
+                const filtered =
+
+                    PRODUCTS.filter(product=>
+
+                        product.category===category
+
+                    );
+
+                renderProducts(filtered);
 
             }
 
-            const filtered = PRODUCTS.filter(product =>
-
-                product.category === category
-
-            );
-
-            renderProducts(filtered);
-
-        });
+        );
 
     });
-
-}
-
-
-/*=====================================================
-RENDER MARKET PRICES
-=====================================================*/
-
-function renderMarketPrices() {
-
-    const internationalTable = document.getElementById(
-
-        "internationalPrices"
-
-    );
-
-    const ugandaTable = document.getElementById(
-
-        "ugandaPrices"
-
-    );
-
-    if (internationalTable) {
-
-        internationalTable.innerHTML = "";
-
-        MARKET_PRICES.international.forEach(item => {
-
-            internationalTable.innerHTML += `
-
-<tr>
-
-    <td>${item.grade}</td>
-
-    <td class="text-end">
-
-        ${item.price}
-
-    </td>
-
-</tr>
-
-`;
-
-        });
-
-    }
-
-    if (ugandaTable) {
-
-        ugandaTable.innerHTML = "";
-
-        MARKET_PRICES.uganda.forEach(item => {
-
-            let value = "";
-
-            if (item.price) {
-
-                value = formatUGX(item.price);
-
-            }
-
-            else {
-
-                value =
-
-                    formatUGX(item.min)
-
-                    +
-
-                    " - "
-
-                    +
-
-                    formatUGX(item.max);
-
-            }
-
-            ugandaTable.innerHTML += `
-
-<tr>
-
-    <td>${item.grade}</td>
-
-    <td class="text-end">
-
-        ${value}
-
-    </td>
-
-</tr>
-
-`;
-
-        });
-
-    }
 
 }
 
@@ -379,17 +314,17 @@ function renderMarketPrices() {
 SORT PRODUCTS
 =====================================================*/
 
-function sortProducts(type) {
+function sortProducts(type){
 
     let sorted = [...PRODUCTS];
 
-    switch (type) {
+    switch(type){
 
         case "priceLow":
 
-            sorted.sort((a, b) =>
+            sorted.sort(
 
-                a.price - b.price
+                (a,b)=>a.price-b.price
 
             );
 
@@ -397,9 +332,9 @@ function sortProducts(type) {
 
         case "priceHigh":
 
-            sorted.sort((a, b) =>
+            sorted.sort(
 
-                b.price - a.price
+                (a,b)=>b.price-a.price
 
             );
 
@@ -407,7 +342,9 @@ function sortProducts(type) {
 
         case "name":
 
-            sorted.sort((a, b) =>
+            sorted.sort(
+
+                (a,b)=>
 
                 a.name.localeCompare(b.name)
 
@@ -423,42 +360,155 @@ function sortProducts(type) {
 
 
 /*=====================================================
-RESET SEARCH
+RESET FILTERS
 =====================================================*/
 
-function resetFilters() {
+function resetFilters(){
 
-    const search = document.getElementById("searchProduct");
+    const search =
 
-    if (search) {
+        document.getElementById(
 
-        search.value = "";
+            "searchProduct"
+
+        );
+
+    if(search){
+
+        search.value="";
 
     }
 
     document
 
-        .querySelectorAll(".category-filter button")
+        .querySelectorAll(
 
-        .forEach(btn =>
+            ".category-filter button"
 
-            btn.classList.remove("active")
+        )
+
+        .forEach(btn=>{
+
+            btn.classList.remove("active");
+
+        });
+
+    const all =
+
+        document.querySelector(
+
+            '[data-category="all"]'
 
         );
 
-    const allButton = document.querySelector(
+    if(all){
 
-        '[data-category="all"]'
-
-    );
-
-    if (allButton) {
-
-        allButton.classList.add("active");
+        all.classList.add("active");
 
     }
 
     renderProducts();
+
+}
+
+
+/*=====================================================
+MARKET PRICES
+=====================================================*/
+
+function renderMarketPrices(){
+
+    const international =
+
+        document.getElementById(
+
+            "internationalPrices"
+
+        );
+
+    const uganda =
+
+        document.getElementById(
+
+            "ugandaPrices"
+
+        );
+
+    if(international){
+
+        international.innerHTML="";
+
+        MARKET_PRICES.international.forEach(item=>{
+
+            international.innerHTML += `
+
+<tr>
+
+<td>${item.grade}</td>
+
+<td class="text-end">
+
+${item.price}
+
+</td>
+
+</tr>
+
+`;
+
+        });
+
+    }
+
+    if(uganda){
+
+        uganda.innerHTML="";
+
+        MARKET_PRICES.uganda.forEach(item=>{
+
+            let value="";
+
+            if(item.price){
+
+                value = formatUGX(item.price);
+
+            }
+
+            else{
+
+                value =
+
+                formatUGX(item.min)
+
+                +
+
+                " - "
+
+                +
+
+                formatUGX(item.max);
+
+            }
+
+            uganda.innerHTML += `
+
+<tr>
+
+<td>${item.grade}</td>
+
+<td class="text-end">
+
+${value}
+
+</td>
+
+</tr>
+
+`;
+
+        });
+
+    }
 
 }
 
@@ -471,7 +521,7 @@ document.addEventListener(
 
     "DOMContentLoaded",
 
-    function () {
+    ()=>{
 
         updateCartBadge();
 

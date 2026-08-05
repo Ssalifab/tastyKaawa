@@ -1,145 +1,133 @@
 /*=====================================================
-    TASTY KAAWA PRODUCT CATALOG
+    TASTY KAAWA PRODUCTS
 =====================================================*/
 
 const PRODUCTS = [
 
-{
-    id:1,
+    {
+        id: 1,
 
-    name:"Natural Fine Robusta",
+        name: "Natural Fine Robusta",
 
-    category:"natural",
+        category: "natural",
 
-    process:"Natural Process",
+        process: "Natural Process",
 
-    grade:"Screen 18",
+        grade: "Screen 18",
 
-    description:
-    "Premium naturally processed Fine Robusta with chocolate, raisin and fruity notes.",
+        description:
+            "Premium naturally processed Fine Robusta with chocolate, raisin and fruity notes.",
 
-    price:13500,
+        unit: "Kg",
 
-    unit:"Kg",
+        price: 13500,
 
-    image:"images/NaturalFineRobusta.jpg",
+        image: "images/NaturalFineRobusta.jpg"
+    },
 
-    stock:true
-},
+    {
+        id: 2,
 
-{
-    id:2,
+        name: "Honey Fine Robusta",
 
-    name:"Honey Fine Robusta",
+        category: "honey",
 
-    category:"honey",
+        process: "Honey Process",
 
-    process:"Honey Process",
+        grade: "Screen 15",
 
-    grade:"Screen 15",
+        description:
+            "Caramel sweetness with balanced acidity and smooth body.",
 
-    description:
-    "Caramel sweetness with balanced acidity and smooth body.",
+        unit: "Kg",
 
-    price:13000,
+        price: 13000,
 
-    unit:"Kg",
+        image: "images/HoneyFineRobusta.jpg"
+    },
 
-    image:"images/HoneyFineRobusta.jpg",
+    {
+        id: 3,
 
-    stock:true
-},
+        name: "Washed Fine Robusta",
 
-{
-    id:3,
+        category: "washed",
 
-    name:"Washed Fine Robusta",
+        process: "Fully Washed",
 
-    category:"washed",
+        grade: "Screen 12",
 
-    process:"Fully Washed",
+        description:
+            "Bright clean cup with floral aroma and excellent consistency.",
 
-    grade:"Screen 12",
+        unit: "Kg",
 
-    description:
-    "Bright clean cup with floral aroma and excellent consistency.",
+        price: 12500,
 
-    price:12500,
+        image: "images/WashedFineRobusta.jpg"
+    },
 
-    unit:"Kg",
+    {
+        id: 4,
 
-    image:"images/WashedFineRobusta.jpg",
+        name: "Premium FAQ Coffee",
 
-    stock:true
-},
+        category: "faq",
 
-{
-    id:4,
+        process: "Commercial Grade",
 
-    name:"Premium FAQ Coffee",
+        grade: "FAQ",
 
-    category:"faq",
+        description:
+            "High quality FAQ coffee suitable for commercial roasting.",
 
-    process:"Commercial Grade",
+        unit: "Kg",
 
-    grade:"FAQ",
+        price: 12000,
 
-    description:
-    "Commercial export grade coffee suitable for roasting.",
+        image: "images/FAQCoffee.jpg"
+    },
 
-    price:12000,
+    {
+        id: 5,
 
-    unit:"Kg",
+        name: "Kiboko Coffee",
 
-    image:"images/FAQCoffee.jpg",
+        category: "kiboko",
 
-    stock:true
-},
+        process: "Sun Dried",
 
-{
-    id:5,
+        grade: "Farm Gate",
 
-    name:"Kiboko Coffee",
+        description:
+            "Freshly dried coffee cherries ready for processing.",
 
-    category:"kiboko",
+        unit: "Kg",
 
-    process:"Sun Dried",
+        price: 6500,
 
-    grade:"Farm Gate",
+        image: "images/KibokoCoffee.jpg"
+    },
 
-    description:
-    "Freshly dried coffee cherries ready for processing.",
+    {
+        id: 6,
 
-    price:6500,
+        name: "Coffee Sample Pack",
 
-    unit:"Kg",
+        category: "sample",
 
-    image:"images/KibokoCoffee.jpg",
+        process: "Mixed Processes",
 
-    stock:true
-},
+        grade: "Sample",
 
-{
-    id:6,
+        description:
+            "Sample pack containing Natural, Honey and Washed Fine Robusta.",
 
-    name:"Coffee Sample Pack",
+        unit: "Pack",
 
-    category:"sample",
+        price: 25000,
 
-    process:"Mixed",
-
-    grade:"Natural • Honey • Washed",
-
-    description:
-    "Contains samples of our three premium Fine Robusta coffees.",
-
-    price:25000,
-
-    unit:"Pack",
-
-    image:"images/SamplePack.jpg",
-
-    stock:true
-}
+        image: "images/SamplePack.jpg"
+    }
 
 ];

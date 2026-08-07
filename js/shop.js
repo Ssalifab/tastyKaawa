@@ -99,6 +99,7 @@ ${formatUGX(product.price)}
 </small>
 
 </div>
+<small class="price-disclaimer">*This is an estimate and may vary.</small>
 
 <div class="mt-3">
 
